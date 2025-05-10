@@ -162,8 +162,70 @@ bool seat_reservation() {
     saving_seat(toggle);
     return true;
 };
-void cancel_reservation() {
-    //naod
+bool cancel_reservation() {
+    string ticket_id,origin,destination;
+    int toggle;
+    cout << "Enter ticket_id: ";
+    cin >> ticket_id;
+    cout << "Enter the origna and destination of the buses respectively: ";
+    cin >> origin >> destination;
+    bus_data& b = get_bus(origin,destination);
+    fstream f1,f2,f3;
+    f1.open("routes/addis_bahir.txt",ios::in|ios::out);
+    f2.open("routes/addis_dire.txt",ios::in|ios::out);
+    f3.open("routes/addis_jima.txt",ios::in|ios::out);
+    if(b.origin == "addis" && b.destination == "bahir"){
+        toggle = 0;
+    }else if(b.origin == "addis" && b.destination == "dire"){
+        toggle = 1;
+    }else if (b.origin == "addis" && b.destination == "jima"){
+        toggle = 2;
+    }
+    if(toggle == 0){
+        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
+            if (a->ticket_id == ticket_id){
+                continue;
+            }
+
+            f1 << a->name << " " << a->age << " " << a->gender << " "
+            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
+            << a->date_of_reservation.day << " "
+            << a->date_of_reservation.month << " "
+            << a->date_of_reservation.year << endl;
+
+        }
+    }
+    if(toggle == 1){
+        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
+            if (a->ticket_id == ticket_id){
+                continue;
+            }
+
+            f2 << a->name << " " << a->age << " " << a->gender << " "
+            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
+            << a->date_of_reservation.day << " "
+            << a->date_of_reservation.month << " "
+            << a->date_of_reservation.year << endl;
+        }
+    }
+    if(toggle == 2){
+        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
+            if (a->ticket_id == ticket_id){
+                continue;
+                }
+
+            f3 << a->name << " " << a->age << " " << a->gender << " "
+            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
+            << a->date_of_reservation.day << " "
+            << a->date_of_reservation.month << " "
+            << a->date_of_reservation.year << endl;
+        }
+    }
+
+    f1.close();
+    f2.close();
+    f3.close();
+
 }
 void view_all_reservations() {
     //naod
@@ -228,7 +290,15 @@ int main() {
     sheger.push_back(route2);
     sheger.push_back(route3);
     readData();
+    int choice;
+    cout << "Enter 1 for seat reservation or 2 to cancel reservation: ";
+    cin >> choice;
+    if (choice == 1){
     seat_reservation();
+    }else{
+        cancel_reservation();
+    }
+
 }
 
 
