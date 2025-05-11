@@ -7,9 +7,13 @@
 #include <string>
 #include <cstdlib>
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
-
+void seat_reservation();
+void cancel_reservation();
+void view_reservations();
+void admin_dashboard();
 string generateUniqueID() {
     // Use current time as seed
     srand(time(0));
@@ -64,7 +68,29 @@ passenger_data customer_create(){
     return p;
 
 }
+void mainMenu() {
+    int choice;
+    do {
+        cout << "\n=== Bus Ticket Reservation System ===\n";
+        cout << "1. Book a Seat\n";
+        cout << "2. Cancel Reservation\n";
+        cout << "3. View Reservations - To get a ticket\n";
+        cout << "4. View dashboard(admin use only)\n";
+        cout << "5. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+        cin.ignore();
 
+        switch (choice) {
+            case 1: seat_reservation(); break;
+            case 2: cancel_reservation(); break;
+            case 3: view_reservations(); break;
+            case 4: admin_dashboard(); break;
+            case 5: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice.\n";
+        }
+    } while (choice != 5);
+}
 bool check_seat_availability(bus_data &b,int s){
    return b.seat[s] == 0;
 }
@@ -75,8 +101,9 @@ bus_data& get_bus(string origin, string destination) {
             return bus; 
         }
     }
+    throw runtime_error("No bus found in this route");
 
-    throw runtime_error("Bus not found");
+    
 }
 bool check_full(bus_data b, int seat_size){
     int remaining_seat = 0;
@@ -92,19 +119,22 @@ bool check_full(bus_data b, int seat_size){
     return false;
 
 }
-void saving_seat(int toggle){
-    fstream f1,f2,f3;
-    f1.open("routes/addis_bahir.txt",ios::in|ios::out|ios::trunc);
-    f2.open("routes/addis_dire.txt",ios::in|ios::out|ios::trunc);
-    f3.open("routes/addis_jima.txt",ios::in|ios::out|ios::trunc);
-    bus_data& b = get_bus("addis","bahir");
-    bus_data& d = get_bus("addis","dire");
-    bus_data& j = get_bus("addis","jima");
+bool saving_seat(int toggle){
+    string path,origin,destination;
+    fstream f;
+    if (toggle == 0) path = "routes/addis_bahir.txt";
+    else if (toggle == 1) path = "routes/addis_dire.txt";
+    else if (toggle == 2) path = "routes/addis_jima.txt";
 
-    int day,month,year,age;
+    if (toggle == 0) destination = "bahirdar";
+    else if (toggle == 1) destination = "diredewa";
+    else if (toggle == 2) destination = "jima";
+
+    bus_data& b = get_bus("addis",destination);
+    f.open(path,ios::out|ios::trunc);
     if(toggle == 0){
         for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
-            f1 << a->name << " " << a->age << " " << a->gender << " "
+            f << a->name << " " << a->age << " " << a->gender << " "
             << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
             << a->date_of_reservation.day << " "
             << a->date_of_reservation.month << " "
@@ -112,27 +142,10 @@ void saving_seat(int toggle){
 
         }
     }
-    if(toggle == 1){
-        for(auto a = d.customers.begin(); a!= d.customers.end(); a++){
-            f2 << a->name << " " << a->age << " " << a->gender << " "
-            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
-            << a->date_of_reservation.day << " "
-            << a->date_of_reservation.month << " "
-            << a->date_of_reservation.year << endl;
-        }
-    }
-    if(toggle == 2){
-        for(auto a = j.customers.begin(); a!= j.customers.end(); a++){
-            f3 << a->name << " " << a->age << " " << a->gender << " "
-            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
-            << a->date_of_reservation.day << " "
-            << a->date_of_reservation.month << " "
-            << a->date_of_reservation.year << endl;
-        }
-    }
-    
+    f.close();
+    return true;
 }
-bool seat_reservation() {
+void seat_reservation() {
     string origin, destination;
     int seat;
     passenger_data p = customer_create();
@@ -141,94 +154,118 @@ bool seat_reservation() {
     bus_data& b = get_bus(origin,destination);
     if (check_full(b,50)){
         cout << "Sorry there is no avialable seats for this bus" << endl;
-        return 1;
+        mainMenu();
     }
     do{
     cout << "Choose Seat from 1 - 50:";
     cin >> seat;
     }while(!check_seat_availability(b,seat));
-    cout << "out of loop" << endl;
     b.seat[seat] = 1;
     p.seat = seat;
     b.customers.push_back(p);
     int toggle;
-    if(b.origin == "addis" && b.destination == "bahir"){
+    if(b.origin == "addis" && b.destination == "bahirdar"){
         toggle = 0;
-    }else if(b.origin == "addis" && b.destination == "dire"){
+    }else if(b.origin == "addis" && b.destination == "diredewa"){
         toggle = 1;
     }else if (b.origin == "addis" && b.destination == "jima"){
         toggle = 2;
     }
-    saving_seat(toggle);
-    return true;
+    if (saving_seat(toggle)) cout << "Seat saved succesfully" << endl;
+    mainMenu();
 };
-bool cancel_reservation() {
-    string ticket_id,origin,destination;
-    int toggle;
-    cout << "Enter ticket_id: ";
-    cin >> ticket_id;
-    cout << "Enter the origna and destination of the buses respectively: ";
-    cin >> origin >> destination;
-    bus_data& b = get_bus(origin,destination);
-    fstream f1,f2,f3;
-    f1.open("routes/addis_bahir.txt",ios::in|ios::out);
-    f2.open("routes/addis_dire.txt",ios::in|ios::out);
-    f3.open("routes/addis_jima.txt",ios::in|ios::out);
-    if(b.origin == "addis" && b.destination == "bahir"){
-        toggle = 0;
-    }else if(b.origin == "addis" && b.destination == "dire"){
-        toggle = 1;
-    }else if (b.origin == "addis" && b.destination == "jima"){
-        toggle = 2;
-    }
-    if(toggle == 0){
+void cancel_reservation() {
+    string ticket_id,origin,destination,path;
+    int toggle,check;
+    bool found = false;
+    fstream f1;
+    do {
+        cout << "Do you want to cancel reservation(continue 1) or exit(-1): ";
+        cin >> check;
+        if(check == -1){
+            break;
+        }
+       cout << "Enter the origna and destination of the buses respectively: ";
+        cin >> origin >> destination;
+        bus_data& b = get_bus(origin,destination);
+        cout << "Enter ticket_id: ";
+        cin >> ticket_id;
+        auto oldzie = b.customers.size();
+        b.customers.erase(
+                remove_if(b.customers.begin(), b.customers.end(), [&](const passenger_data& c) {
+                return c.ticket_id == ticket_id;
+            }),
+            b.customers.end()
+        );
+        found = oldzie > b.customers.size();
+        if(b.origin == "addis" && b.destination == "bahirdar"){
+            toggle = 0;
+                    }else if(b.origin == "addis" && b.destination == "diredewa"){
+            toggle = 1;
+        }else if (b.origin == "addis" && b.destination == "jima"){
+            toggle = 2;
+        }
+        if (toggle == 0) path = "routes/addis_bahir.txt";
+        else if (toggle == 1) path = "routes/addis_dire.txt";
+        else if (toggle == 2) path = "routes/addis_jima.txt";
+        f1.open(path,ios::in|ios::out|ios::trunc);
         for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
-            if (a->ticket_id == ticket_id){
-                continue;
-            }
-
+        
             f1 << a->name << " " << a->age << " " << a->gender << " "
             << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
             << a->date_of_reservation.day << " "
             << a->date_of_reservation.month << " "
             << a->date_of_reservation.year << endl;
-
         }
-    }
-    if(toggle == 1){
-        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
-            if (a->ticket_id == ticket_id){
-                continue;
-            }
-
-            f2 << a->name << " " << a->age << " " << a->gender << " "
-            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
-            << a->date_of_reservation.day << " "
-            << a->date_of_reservation.month << " "
-            << a->date_of_reservation.year << endl;
+        if(!found){
+            cout << "Not Found please try again " << endl;   
+        }else{
+            cout << "Cancelled Sucesffuly" << endl;
         }
-    }
-    if(toggle == 2){
-        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
-            if (a->ticket_id == ticket_id){
-                continue;
-                }
-
-            f3 << a->name << " " << a->age << " " << a->gender << " "
-            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
-            << a->date_of_reservation.day << " "
-            << a->date_of_reservation.month << " "
-            << a->date_of_reservation.year << endl;
-        }
-    }
+    }while(!found);
 
     f1.close();
-    f2.close();
-    f3.close();
 
 }
-void view_all_reservations() {
-    //naod
+void view_reservations() {
+    string ticket_id,origin,destination,path;
+    int toggle,check;
+    bool found = false;
+    fstream f1;
+    do {
+        cout << "Do you want to see reservation(continue 1) or exit(-1): ";
+        cin >> check;
+        if(check == -1){
+            break;
+        }
+       cout << "Enter the origna and destination of the buses respectively: ";
+        cin >> origin >> destination;
+        bus_data& b = get_bus(origin,destination);
+        cout << "Enter ticket_id: ";
+        cin >> ticket_id;
+        f1.open("ticket.txt",ios::out|ios::trunc);
+        auto it = find_if(b.customers.begin(), b.customers.end(), [&](const passenger_data& c) {
+            return c.ticket_id == ticket_id;
+        });
+        if(it != b.customers.end()){
+            found = true;
+        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
+            if (a->ticket_id == ticket_id){
+                f1 << setw(25) << "Individual Ticket" << endl;
+                f1 << "Name: " << a->name << endl;
+                f1 << "Age: " << a->age << endl;
+                f1 << "phone_no: " << a->phone_no << endl;
+                f1 << "Ticket_id: " << a->ticket_id << endl;
+                f1 << "Date of reservation: " << a->date_of_reservation.day << "/" << a->date_of_reservation.month<< "/" << a->date_of_reservation.year << endl;
+                f1 << "Seat number: " << a->seat << endl;
+            }
+
+        }
+        cout << "Ticket generate Sucesffully on ticket.txt" << endl;
+        };
+        if(!found) cout << "Ticket Not found Try again" << endl;
+    }while(!found);
+    f1.close();
 }
 
 void admin_dashboard() {
@@ -252,8 +289,8 @@ void readData(){
     f1.open("routes/addis_bahir.txt",ios::in|ios::out);
     f2.open("routes/addis_dire.txt",ios::in|ios::out);
     f3.open("routes/addis_jima.txt",ios::in|ios::out);
-    bus_data& b = get_bus("addis","bahir");
-    bus_data& d = get_bus("addis","dire");
+    bus_data& b = get_bus("addis","bahirdar");
+    bus_data& d = get_bus("addis","diredewa");
     bus_data& j = get_bus("addis","jima");
     //name age gender phone_number ticket_id day month year
     string name,phone_number,ticket_id;
@@ -278,26 +315,20 @@ void readData(){
     f2.close();
     f3.close();
 }
+
 int main() {
     bus_data route1,route2,route3;
     route1.origin = "addis";
-    route1.destination = "dire";
+    route1.destination = "bahirdar";
     route2.origin = "addis";
-    route2.destination = "bahir";
+    route2.destination = "diredewa";
     route3.origin = "addis";
     route3.destination = "jima";
     sheger.push_back(route1);
     sheger.push_back(route2);
     sheger.push_back(route3);
     readData();
-    int choice;
-    cout << "Enter 1 for seat reservation or 2 to cancel reservation: ";
-    cin >> choice;
-    if (choice == 1){
-    seat_reservation();
-    }else{
-        cancel_reservation();
-    }
+    mainMenu();
 
 }
 
