@@ -268,24 +268,24 @@ void view_reservations() {
     f1.close();
 }
 
-struct Booking {
-    string ticketID;
-    int seatNo;
-    string name;
-    string gender;
-    string phone;
-};
 
-vector<Booking> bookings;
 
 void admin_dashboard();
-void viewAllBookings();
+void view_bookings();
 void searchBooking();
 void exportBookings();
 void resetBookings();
 void pauseAndClear();
 
 void admin_dashboard() {
+    string password;
+    cout << "Enter admin password: ";
+    cin >> password;
+    
+    if (password != "admin123") {
+        cout << "Invalid password. Access denied.\n";
+        return;
+    }
     int choice;
 
     while (true) {
@@ -301,7 +301,7 @@ void admin_dashboard() {
 
         switch (choice) {
             case 1:
-                viewAllBookings();
+                view_bookings();
                 break;
             case 2:
                 searchBooking();
@@ -324,23 +324,40 @@ void admin_dashboard() {
 }
 
 // CASE 1 
-void viewAllBookings() {
-    cout << "\nAll Bookings:\n";
-    if (bookings.empty()) {
-        cout << "No bookings available.\n";
-        return;
-    }
+void view_bookings() {
+    cout << "\n=== ALL BOOKINGS ===\n";  
+    int totalBookings =0;                                
+    for (const auto& bus : sheger) {
+        if (bus.customers.empty())
+            continue;
+        totalBookings += bus.customers.size();    
+        cout << "\nRoute: " << bus.origin << " to " << bus.destination << "\n";
+        cout << left << setw(15) << "Name" << setw(10) << "Seat" 
+             << setw(15) << "Ticket ID" << setw(10) << "Gender" 
+             << setw(15) << "Phone" << setw(15) << "Date\n";
+        cout << string(80, '-') << endl;
 
-    cout << left << setw(12) << "Ticket ID" << setw(10) << "Seat No" 
-         << setw(15) << "Name" << setw(10) << "Gender" << setw(15) << "Phone\n";
-    cout << "-------------------------------------------------------------\n";
-
-    for (const auto& b : bookings) {
-        cout << setw(12) << b.ticketID << setw(10) << b.seatNo
-             << setw(15) << b.name << setw(10) << b.gender << setw(15) << b.phone << "\n";
+        int counter = 1;
+        for (const auto& cust : bus.customers) {
+            cout << setw(15) << cust.name << setw(10) << cust.seat 
+                 << setw(15) << cust.ticket_id << setw(10) << cust.gender 
+                 << setw(15) << cust.phone_no 
+                 << cust.date_of_reservation.day << "/" 
+                 << cust.date_of_reservation.month << "/" 
+                 << cust.date_of_reservation.year << endl;
+        }
     }
+    if (totalBookings == 0) {
+        cout << "\nNo bookings found in the system.\n";
+    } else {
+        cout << "\nTotal bookings across all routes: " << totalBookings << endl;
+    }
+    
+    // Pause to view results
+    cout << "\nPress Enter to continue...";
+    cin.ignore();
+    cin.get();
 }
-
 // case 2
 void searchBooking() {
     string id;
@@ -354,23 +371,28 @@ void searchBooking() {
     if (type == 'T' || type == 't') {
         cout << "Enter Ticket ID: ";
         cin >> id;
-        for (const auto& b : bookings) {
-            if (b.ticketID == id) {
-                cout << " Booking Found: " << b.name << " (Seat " << b.seatNo << ")\n";
-                found = true;
-                break;
+        for(const auto& bus : sheger){
+            for (const auto& cust : bus.customers) {
+                if (cust.ticket_id == id) {
+                    cout << " Booking Found: " << cust.name << " (Seat " << cust.seat << ")\n";
+                    found = true;
+                    break;
+                }
             }
         }
-    } else if (type == 'S' || type == 's') {
+    } 
+    else if (type == 'S' || type == 's') {
         cout << "Enter Seat Number: ";
         cin >> seat;
-        for (const auto& b : bookings) {
-            if (b.seatNo == seat) {
-                cout << " Booking Found: " << b.name << " (Ticket ID: " << b.ticketID << ")\n";
+        for(const auto& bus : sheger){
+            for (const auto& cust : bus.customers) {
+            if (cust.seat == seat) {
+                cout << " Booking Found: " << cust.name << " (Ticket ID: " << cust.ticket_id << ")\n";
                 found = true;
                 break;
             }
         }
+    }   
     } else {
         cout << "Invalid option.\n";
         return;
@@ -392,13 +414,15 @@ void exportBookings() {
     }
 
     report << "========== Booking Report ==========\n";
-    report << left << setw(12) << "Ticket ID" << setw(10) << "Seat No" 
+    for(const auto& bus : sheger){
+        report << left << setw(12) << "Ticket ID" << setw(10) << "Seat No" 
            << setw(15) << "Name" << setw(10) << "Gender" << setw(15) << "Phone\n";
-    report << "-------------------------------------------------------------\n";
+        report << "-------------------------------------------------------------\n";
+        for (const auto& cust : bus.customers) {
+        report << setw(12) << cust.ticket_id << setw(10) << cust.seat
+               << setw(15) << cust.name << setw(10) << cust.gender << setw(15) << cust.phone_no << "\n";
+    }
 
-    for (const auto& b : bookings) {
-        report << setw(12) << b.ticketID << setw(10) << b.seatNo
-               << setw(15) << b.name << setw(10) << b.gender << setw(15) << b.phone << "\n";
     }
 
     report.close();
@@ -413,9 +437,15 @@ void resetBookings() {
 
 
     if (confirm == 'y' || confirm == 'Y') {
-        bookings.clear();
+        for (auto& bus : sheger){
+            bus.customers.clear();
+            for(int i = 0; i<50; i++){
+                bus.seat[i] = 0;
+            }
+        }
         cout << "All bookings have been reset.\n";
-    } else {
+    } 
+    else {
         cout << "Operation cancelled.\n";
     }
 }
