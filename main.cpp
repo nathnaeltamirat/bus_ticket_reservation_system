@@ -10,10 +10,47 @@
 #include <algorithm>
 
 using namespace std;
+bool age_validate(int age);
+bool name_validate(const string& name);
+bool phone_no_validate(const string& phone_no);
+bool gender_validate(char gender);
 void seat_reservation();
 void cancel_reservation();
 void view_reservations();
 void admin_dashboard();
+
+bool age_validate(int age) {
+    return (age >10 && age <90);
+}
+bool name_validate(const string& name) {
+    if (name.length() < 2 || name.length() > 50) {
+        return false;
+    }
+
+    for (char c : name) {
+        if (!isalpha(c) && c != ' ') {
+            return false;
+        }
+    }
+    return true;
+}
+bool phone_no_validate(const string& phone_no) {
+    if (phone_no.length() != 9 || phone_no.substr(0, 1) != "9") {
+        return false;
+    }
+
+    for (char c : phone_no) {
+        if (!isdigit(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+bool gender_validate(char gender) {
+    gender = tolower(gender);
+    return (gender == 'm' || gender == 'f' );
+}
+
 string generateUniqueID() {
     // Use current time as seed
     srand(time(0));
@@ -53,21 +90,50 @@ passenger_data customer_create(){
     passenger_data p;
     date d;
     int val = time(0);
-    cout << "Enter your name: ";
-    cin >> p.name;
-    cout << "Enter your phone_no: ";
-    cin >> p.phone_no;
-    cout << "Enter Gender (m or f)";
-    cin >> p.gender;
-    cout << "Enter your age: ";
-    cin >> p.age;
-    cout << "Enter the day, month and year of reversed date respectively: ";
+    cin.ignore();
+  
+    while (true) {
+        cout << "Enter your name: ";
+        getline(cin, p.name);
+        if (name_validate(p.name)) break;
+        cout << "Invalid name! Please use only letters and spaces (2-50 characters).\n";
+    }
+    
+    while (true) {
+        cout << "Enter your phone number (9 digits starting with 9): +251";
+        cin >> p.phone_no;
+        if (phone_no_validate(p.phone_no)) break;
+        cout << "Invalid phone number! Please enter a 10-digit number starting with 9.\n";
+        cin.clear();
+        cin.ignore();
+    }
+    
+    while (true) {
+        cout << "Enter Gender (m or f): ";
+        cin >> p.gender;
+        if (gender_validate(p.gender)) break;
+        cout << "Invalid gender! Please enter 'm' or 'f'.\n";
+        cin.clear();
+        cin.ignore();
+    }
+    
+    
+    while (true) {
+        cout << "Enter your age (11-89): ";
+        cin >> p.age;
+        if (age_validate(p.age)) break;
+        cout << "Invalid age! Please enter an age between 11 and 89.\n";
+        cin.clear();
+        cin.ignore(100, '\n');
+    }
     cin >> d.day >> d.month >> d.year;
     p.date_of_reservation = d;
     p.ticket_id = generateUniqueID();
+    cin.ignore();
     return p;
 
 }
+
 void mainMenu() {
     int choice;
     do {
