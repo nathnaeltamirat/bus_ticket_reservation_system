@@ -480,17 +480,28 @@ void exportBookings() {
     }
 
     report << "========== Booking Report ==========\n";
-    for(const auto& bus : sheger){
-        report << left << setw(12) << "Ticket ID" << setw(10) << "Seat No" 
-           << setw(15) << "Name" << setw(10) << "Gender" << setw(15) << "Phone\n";
-        report << "-------------------------------------------------------------\n";
+    report << left
+           << setw(18) << "Ticket ID"
+           << setw(10) << "Seat No"
+           << setw(18) << "Name"
+           << setw(15) << "Gender"
+           << setw(15) << "Phone"
+           << "\n";
+
+    report << string(75, '-') << "\n";
+
+    // Data Rows
+    for (const auto& bus : sheger) {
         for (const auto& cust : bus.customers) {
-        report << setw(12) << cust.ticket_id << setw(10) << cust.seat
-               << setw(15) << cust.name << setw(10) << cust.gender << setw(15) << cust.phone_no << "\n";
+            report << left
+                   << setw(18) << cust.ticket_id<<" "
+                   << setw(10) << cust.seat
+                   << setw(18) << cust.name
+                   << setw(12) << cust.gender
+                   << setw(15) << cust.phone_no
+                   << "\n";
+        }
     }
-
-    }
-
     report.close();
     cout << "Report exported to booking_report.txt\n";
 }
