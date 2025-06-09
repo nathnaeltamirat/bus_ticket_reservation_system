@@ -200,16 +200,15 @@ bool saving_seat(int toggle){
 
     bus_data& b = get_bus("addis",destination);
     f.open(path,ios::out|ios::trunc);
-    if(toggle == 0){
-        for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
-            f << a->name << " " << a->age << " " << a->gender << " "
-            << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
-            << a->date_of_reservation.day << " "
-            << a->date_of_reservation.month << " "
-            << a->date_of_reservation.year << endl;
+    for(auto a = b.customers.begin(); a!= b.customers.end(); a++){
+        f << a->name << " " << a->age << " " << a->gender << " "
+        << a->phone_no << " " << a->ticket_id << " " << a->seat << " "
+        << a->date_of_reservation.day << " "
+        << a->date_of_reservation.month << " "
+        << a->date_of_reservation.year << endl;
 
-        }
     }
+
     f.close();
     return true;
 }
@@ -523,7 +522,7 @@ void resetBookings() {
     char confirm;
     cout << "\nAre you sure you want to delete ALL bookings? (y/n): ";
     cin >> confirm;
-
+    fstream f1, f2, f3;
 
     if (confirm == 'y' || confirm == 'Y') {
         for (auto& bus : sheger){
@@ -532,11 +531,16 @@ void resetBookings() {
                 bus.seat[i] = 0;
             }
         }
+    f1.open("routes/addis_bahir.txt",ios::out|ios::trunc);
+    f2.open("routes/addis_dire.txt",ios::out|ios::trunc);
+    f3.open("routes/addis_jima.txt",ios::out|ios::trunc);
+
         cout << "All bookings have been reset.\n";
     } 
     else {
         cout << "Operation cancelled.\n";
     }
+    f1.close(); f2.close(); f3.close();
 }
 
 passenger_data saving_data(string name,int age,char gender,string phone_number,string ticket_id,int seat,int day,int month,int year){
@@ -554,9 +558,9 @@ passenger_data saving_data(string name,int age,char gender,string phone_number,s
 }
 void readData(){
     fstream f1,f2,f3;
-    f1.open("routes/addis_bahir.txt",ios::in|ios::out);
-    f2.open("routes/addis_dire.txt",ios::in|ios::out);
-    f3.open("routes/addis_jima.txt",ios::in|ios::out);
+    f1.open("routes/addis_bahir.txt",ios::in);
+    f2.open("routes/addis_dire.txt",ios::in);
+    f3.open("routes/addis_jima.txt",ios::in);
     bus_data& b = get_bus("addis","bahirdar");
     bus_data& d = get_bus("addis","diredewa");
     bus_data& j = get_bus("addis","jima");
@@ -564,6 +568,7 @@ void readData(){
     string name,phone_number,ticket_id;
     char gender;
     int day,month,year,age,seat;
+    
     while(f1 >> name >> age >> gender >> phone_number >> ticket_id >> seat >> day >> month >> year ){
         b.seat[seat] = 1;
         passenger_data p = saving_data(name,age,gender,phone_number,ticket_id,seat,day,month,year);
