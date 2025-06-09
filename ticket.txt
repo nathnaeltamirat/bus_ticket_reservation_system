@@ -1,7 +1,0 @@
-        Individual Ticket
-Name: nathnael
-Age: 19
-phone_no: 0926727954
-Ticket_id: 17469582119981
-Date of reservation: 1/1/2025
-Seat number: 49

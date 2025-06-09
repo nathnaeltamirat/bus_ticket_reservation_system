@@ -126,10 +126,12 @@ passenger_data customer_create(){
         cin.clear();
         cin.ignore(100, '\n');
     }
+    cout << "Enter the day the month and the year of reservation respectively:";
     cin >> d.day >> d.month >> d.year;
     p.date_of_reservation = d;
+
     p.ticket_id = generateUniqueID();
-    cin.ignore();
+
     return p;
 
 }
@@ -145,10 +147,10 @@ void mainMenu() {
         cout << "5. Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
-        cin.ignore();
+     
 
         switch (choice) {
-            case 1: seat_reservation(); break;
+            case 1: seat_reservation() ; break;
             case 2: cancel_reservation(); break;
             case 3: view_reservations(); break;
             case 4: admin_dashboard(); break;
@@ -215,6 +217,10 @@ void seat_reservation() {
     string origin, destination;
     int seat;
     passenger_data p = customer_create();
+    // if(p is NULL){
+    //     cout << "INVALID CREATION" << endl;
+    //     seat_reservation();
+    // }
     cout << "Enter the origna and destination of the buses respectively: ";
     cin >> origin >> destination;
     bus_data& b = get_bus(origin,destination);
@@ -237,7 +243,7 @@ void seat_reservation() {
     }else if (b.origin == "addis" && b.destination == "jima"){
         toggle = 2;
     }
-    if (saving_seat(toggle)) cout << "Seat saved succesfully" << endl;
+    if (saving_seat(toggle)) cout << "Seat saved succesfully  please save this ticket id in secure place " << p.ticket_id<< endl;
     mainMenu();
 };
 void cancel_reservation() {
@@ -251,12 +257,17 @@ void cancel_reservation() {
         if(check == -1){
             break;
         }
-       cout << "Enter the origna and destination of the buses respectively: ";
+       cout << "Enter the orign and destination of the buses respectively: ";
         cin >> origin >> destination;
         bus_data& b = get_bus(origin,destination);
         cout << "Enter ticket_id: ";
         cin >> ticket_id;
         auto oldzie = b.customers.size();
+        for (auto a = b.customers.begin(); a!= b.customers.end();a ++){
+            if(a->ticket_id == ticket_id){
+                b.seat[a->seat] = 0;
+            }
+        }
         b.customers.erase(
                 remove_if(b.customers.begin(), b.customers.end(), [&](const passenger_data& c) {
                 return c.ticket_id == ticket_id;
@@ -445,6 +456,7 @@ void searchBooking() {
                     break;
                 }
             }
+            if(found) break;
         }
     } 
     else if (type == 'S' || type == 's') {
@@ -461,7 +473,7 @@ void searchBooking() {
     }   
     } else {
         cout << "Invalid option.\n";
-        return;
+        searchBooking();
     }
 
     if (!found) {
